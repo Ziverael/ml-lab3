@@ -52,12 +52,16 @@ ignore_missing_imports = true
 
 
 
-[tool.ruff.lint]
+[tool.ruff]
 line-length = 80
 indent-width = 4
+
+[tool.ruff.lint]
 select = ["ALL"]
 unfixable = ["F841"]
 ignore = [ "ANN", "TD", "N805", "N806", "COM812", "ISC001", "E501", "D"]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
@@ -89,8 +93,6 @@ section-order = [
 lines-after-imports = 2
 known-third-party = ["yaml"]
 
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 
 
