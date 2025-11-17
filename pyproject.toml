@@ -36,8 +36,15 @@ target-version = ['py312']
 
 [tool.mypy]
 python_version = "3.12"
+files = ["src", "tests"]
+
 plugins = [
     "pydantic.mypy",
+]
+exclude = [
+    "test_gd_simple.py",
+    "test_gradient_descent.py",
+    "test_ridge_gd.py",
 ]
 warn_unused_configs = true
 show_error_context = true
@@ -46,7 +53,7 @@ pretty = true
 
 [[tool.mypy.overrides]]
 module = [
-    "sklearn.*"
+    "sklearn.*",
 ]
 ignore_missing_imports = true
 
@@ -82,6 +89,10 @@ convention = "numpy"
     "TRY003",  # Avoid specifying long messages outside the exception class
     "D",
 ]
+#Prerefined tests
+"tests/test_gd_simple.py" = ["ALL"]
+"tests/test_gradient_descent.py" = ["ALL"]
+"tests/test_ridge_gd.py" = ["ALL"]
 
 [tool.ruff.lint.isort]
 section-order = [

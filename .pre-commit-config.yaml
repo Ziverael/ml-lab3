@@ -16,7 +16,10 @@ repos:
     rev: v1.18.2
     hooks:
     - id: mypy
-      args: [
-        --config-file=pyproject.toml
-      ]
-      additional_dependencies: [ "pydantic", "numpy", "pytest" ]
+      pass_filenames: false
+      additional_dependencies:
+        - pydantic
+        - numpy
+        - pytest
+      args:
+        - --config-file=pyproject.toml
