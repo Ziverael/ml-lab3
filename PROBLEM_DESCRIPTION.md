@@ -1,7 +1,7 @@
 # Gradient Descent for Linear Regression: An Alternative to the Closed-Form Solution
 
-**Author:** Tutorial Series  
-**Date:** November 3, 2025  
+**Author:** Tutorial Series
+**Date:** November 3, 2025
 **Topics:** gradient-descent, linear-regression, optimization, machine-learning
 
 ## Introduction
@@ -126,11 +126,11 @@ def gradient_J(theta):
 def gradient_descent_1d(alpha, num_iterations=20, theta_init=0):
     theta = theta_init
     history = [theta]
-    
+
     for i in range(num_iterations):
         theta = theta - alpha * gradient_J(theta)
         history.append(theta)
-    
+
     return np.array(history)
 
 # Test different learning rates
@@ -142,20 +142,20 @@ axes = axes.flatten()
 
 for idx, alpha in enumerate(learning_rates):
     ax = axes[idx]
-    
+
     # Plot the loss function
     ax.plot(theta_range, J(theta_range), 'k-', linewidth=2, label='J(θ)')
-    
+
     # Run gradient descent
     theta_history = gradient_descent_1d(alpha, num_iterations=20)
-    
+
     # Plot the path
-    ax.plot(theta_history, J(theta_history), 'ro-', markersize=8, 
+    ax.plot(theta_history, J(theta_history), 'ro-', markersize=8,
             linewidth=1.5, alpha=0.7, label='GD Path')
-    ax.plot(theta_history[0], J(theta_history[0]), 'go', 
+    ax.plot(theta_history[0], J(theta_history[0]), 'go',
             markersize=12, label='Start')
     ax.plot(3, 0, 'b*', markersize=15, label='Minimum')
-    
+
     ax.set_xlabel('θ', fontsize=12)
     ax.set_ylabel('J(θ)', fontsize=12)
     ax.set_title(f'Learning Rate α = {alpha}', fontsize=14)
@@ -201,8 +201,8 @@ import matplotlib.pyplot as plt
 
 class LinearRegressionGD:
     """Linear Regression using Batch Gradient Descent"""
-    
-    def __init__(self, learning_rate=0.01, num_iterations=1000, 
+
+    def __init__(self, learning_rate=0.01, num_iterations=1000,
                  tolerance=1e-6, verbose=True):
         """
         Parameters:
@@ -222,37 +222,37 @@ class LinearRegressionGD:
         self.verbose = verbose
         self.theta = None
         self.loss_history = []
-    
+
     def _compute_loss(self, X, y, theta):
         """Compute MSE loss"""
         m = len(y)
         predictions = X @ theta
         loss = (1/(2*m)) * np.sum((predictions - y)**2)
         return loss
-    
+
     def _compute_gradient(self, X, y, theta):
         """Compute gradient of MSE loss"""
         m = len(y)
         predictions = X @ theta
         gradient = (1/m) * X.T @ (predictions - y)
         return gradient
-    
+
     def fit(self, X, y):
         """
         Fit the linear regression model using gradient descent
-        
+
         Parameters:
         -----------
         X : numpy array of shape (m, d)
             Training features (without intercept column)
         y : numpy array of shape (m,)
             Training targets
-            
+
         Returns:
         --------
         self : object
             Returns self for method chaining
-            
+
         TODO: Implement this method!
         Your implementation should:
         1. Add an intercept column of ones to X
@@ -267,21 +267,21 @@ class LinearRegressionGD:
         """
         # YOUR CODE HERE
         raise NotImplementedError("You need to implement the fit method!")
-    
+
     def predict(self, X):
         """
         Make predictions on new data
-        
+
         Parameters:
         -----------
         X : numpy array of shape (m, d)
             Feature matrix (without intercept column)
-            
+
         Returns:
         --------
         predictions : numpy array of shape (m,)
             Predicted target values
-            
+
         TODO: Implement this method!
         Your implementation should:
         1. Add an intercept column to X
@@ -290,7 +290,7 @@ class LinearRegressionGD:
         """
         # YOUR CODE HERE
         raise NotImplementedError("You need to implement the predict method!")
-    
+
     def plot_loss_history(self):
         """Plot the loss function over iterations"""
         plt.figure(figsize=(10, 6))
@@ -337,7 +337,7 @@ ax1.scatter(X, y, alpha=0.5, label='Data')
 X_plot = np.array([[0], [2]])
 y_pred_gd = model_gd.predict(X_plot)
 ax1.plot(X_plot, y_pred_gd, 'r-', linewidth=2, label='Gradient Descent')
-ax1.plot(X_plot, [theta_closed_form[0], theta_closed_form[0] + 2*theta_closed_form[1]], 
+ax1.plot(X_plot, [theta_closed_form[0], theta_closed_form[0] + 2*theta_closed_form[1]],
          'g--', linewidth=2, label='Closed-Form')
 ax1.set_xlabel('x', fontsize=12)
 ax1.set_ylabel('y', fontsize=12)
@@ -371,26 +371,26 @@ def fit(self, X, y):
     # Add intercept term
     m, d = X.shape
     X_with_intercept = np.column_stack([np.ones(m), X])
-    
+
     # Initialize parameters
     self.theta = np.zeros(d + 1)
-    
+
     # Gradient descent loop
     for iteration in range(self.num_iterations):
         # Compute gradient
         gradient = self._compute_gradient(X_with_intercept, y, self.theta)
-        
+
         # Update parameters
         self.theta = self.theta - self.learning_rate * gradient
-        
+
         # Compute and store loss
         loss = self._compute_loss(X_with_intercept, y, self.theta)
         self.loss_history.append(loss)
-        
+
         # Print progress
         if self.verbose and (iteration % 100 == 0 or iteration == self.num_iterations - 1):
             print(f"Iteration {iteration}: Loss = {loss:.6f}")
-        
+
         # Check convergence
         if iteration > 0:
             loss_change = abs(self.loss_history[-1] - self.loss_history[-2])
@@ -398,7 +398,7 @@ def fit(self, X, y):
                 if self.verbose:
                     print(f"Converged at iteration {iteration}")
                 break
-    
+
     return self
 
 def predict(self, X):
@@ -640,7 +640,7 @@ $\nabla J(\boldsymbol{\theta}) = \frac{1}{m}\mathbf{X}^T(\mathbf{X}\boldsymbol{\
 
 **Important:** Don't regularize the intercept term $\theta_0$!
 
-**Deliverable:** 
+**Deliverable:**
 - Implementation in `src/ridge_regression_gd.py`
 - Notebook `notebooks/ridge_regression.ipynb` demonstrating:
   - Comparison with `sklearn.linear_model.Ridge`
@@ -738,18 +738,18 @@ Use numerical gradient checking to verify your gradient calculations:
 def numerical_gradient(theta, X, y, epsilon=1e-5):
     """Compute gradient numerically for debugging"""
     grad = np.zeros_like(theta)
-    
+
     for i in range(len(theta)):
         theta_plus = theta.copy()
         theta_minus = theta.copy()
         theta_plus[i] += epsilon
         theta_minus[i] -= epsilon
-        
+
         loss_plus = compute_loss(X, y, theta_plus)
         loss_minus = compute_loss(X, y, theta_minus)
-        
+
         grad[i] = (loss_plus - loss_minus) / (2 * epsilon)
-    
+
     return grad
 
 # Compare analytical and numerical gradients
