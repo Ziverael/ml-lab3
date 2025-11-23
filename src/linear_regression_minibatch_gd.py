@@ -1,104 +1,66 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import logging
 from tqdm import tqdm
-from src.linear_regression_gd import LinearRegressionGD
+import logging
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from src.linear_regression_gd import LinearRegressionGD
 
 class LinearRegressionMiniBatchGD(LinearRegressionGD):
     """Linear Regression using Mini-Batch Gradient Descent"""
 
+    def __init__(
+        self,
+        learning_rate=0.01,
+        num_epochs=50,
+        batch_size=32,
+        tolerance=1e-6,
+        verbose=True,
+    ):
+        super().__init__(learning_rate, num_epochs, tolerance, verbose)
+        self.batch_size = batch_size
+        self.num_epochs = num_epochs
+
     def fit(self, X, y):
-        # TODO
-        _, d = X.shape
+        m, d = X.shape
+        # Add intercept
         X_with_intercept = (
             np.ones((X.shape[0], 1))
             if X.shape[1] == 0
             else np.column_stack([np.ones(X.shape[0]), X])
         )
-        self.theta = np.zeros(d + 1, dtype=np.float64)
-        self.loss_history.append(
-            self._compute_loss(X_with_intercept, y, self.theta)
-        )
-        for idx in tqdm(range(self.num_iterations)):
-            np.random.shuffle(X_with_intercept)
-            test_example = X_with_intercept[0, :]
-            gradient = self._compute_gradient(test_example, y, self.theta)
-            self._update_theta(gradient)
-            if not (idx % 100):
-                if self.verbose:
-                    logger.info("Theta: %.02f", self.theta)
-                else:
-                    logger.debug("Theta: %.02f", self.theta)
-                self.loss_history.append(
-                    self._compute_loss(test_example, y, self.theta)
-                )
-                if (
-                    np.abs(sum(gradient)) < self.tolerance
-                    or np.abs(self.loss_history[-1] - self.loss_history[-2])
-                    < self.tolerance
-                ):
-                    break
+        self.theta = np.zeros(d + 1)
 
+        self.loss_history = []
+        self.loss_history.append(self._compute_loss(X_with_intercept, y, self.theta))
 
-if __name__ == "__main__":
-    # Generate synthetic data
-    np.random.seed(42)
-    m = 100  # number of samples
-    X = 2 * np.random.rand(m, 1)
-    y = 4 + 3 * X.squeeze() + np.random.randn(m)  # y = 4 + 3x + noise
+        for epoch in tqdm(range(self.num_epochs)):
+            # Shuffle indices
+            indices = np.random.permutation(m)
+            X_shuffled = X_with_intercept[indices]
+            y_shuffled = y[indices]
 
-    # Fit using gradient descent
-    model_gd = LinearRegressionSGD(
-        learning_rate=0.1, num_iterations=1000, verbose=True
-    )
-    model_gd.fit(X, y)
+            # Mini-batch loop
+            for start in range(0, m, self.batch_size):
+                end = start + self.batch_size
+                X_batch = X_shuffled[start:end]
+                y_batch = y_shuffled[start:end]
 
-    # Compare with closed-form solution
-    X_with_intercept = np.column_stack([np.ones(m), X])
-    theta_closed_form = (
-        np.linalg.inv(X_with_intercept.T @ X_with_intercept)
-        @ X_with_intercept.T
-        @ y
-    )
+                # Compute gradient for the batch
+                predictions = X_batch @ self.theta
+                gradient = (1 / len(y_batch)) * X_batch.T @ (predictions - y_batch)
 
-    print("\nGradient Descent Solution:")
-    print(f"θ₀ (intercept) = {model_gd.theta[0]:.4f}")
-    print(f"θ₁ (slope) = {model_gd.theta[1]:.4f}")
+                self._update_theta(gradient)
 
-    print("\nClosed-Form Solution:")
-    print(f"θ₀ (intercept) = {theta_closed_form[0]:.4f}")
-    print(f"θ₁ (slope) = {theta_closed_form[1]:.4f}")
+            # Compute loss after all batches
+            epoch_loss = self._compute_loss(X_with_intercept, y, self.theta)
+            self.loss_history.append(epoch_loss)
 
-    # Plot results
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    # Plot data and fitted line
-    ax1.scatter(X, y, alpha=0.5, label="Data")
-    X_plot = np.array([[0], [2]])
-    y_pred_gd = model_gd.predict(X_plot)
-    ax1.plot(X_plot, y_pred_gd, "r-", linewidth=2, label="Gradient Descent")
-    ax1.plot(
-        X_plot,
-        [theta_closed_form[0], theta_closed_form[0] + 2 * theta_closed_form[1]],
-        "g--",
-        linewidth=2,
-        label="Closed-Form",
-    )
-    ax1.set_xlabel("x", fontsize=12)
-    ax1.set_ylabel("y", fontsize=12)
-    ax1.set_title("Linear Regression Fit", fontsize=14)
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
+            if self.verbose and (epoch % 5 == 0):
+                logger.info(f"Epoch {epoch}, Loss: {epoch_loss:.6f}, Theta: {self.theta}")
 
-    # Plot loss history
-    ax2.plot(model_gd.loss_history, linewidth=2)
-    ax2.set_xlabel("Iteration", fontsize=12)
-    ax2.set_ylabel("Loss J(θ)", fontsize=12)
-    ax2.set_title("Loss Function Convergence", fontsize=14)
-    ax2.grid(True, alpha=0.3)
+            # Early stopping
+            if abs(self.loss_history[-1] - self.loss_history[-2]) < self.tolerance:
+                break
 
-    plt.tight_layout()
-    plt.show()
+        return self

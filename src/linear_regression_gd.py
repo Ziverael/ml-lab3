@@ -1,7 +1,9 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
-import logging
 from tqdm import tqdm
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,7 +24,7 @@ class LinearRegressionGD:
         self.tolerance = tolerance
         self.verbose = verbose
         self.theta = None
-        self.loss_history = [0.0]
+        self.loss_history = []
 
     def _compute_loss(self, X, y, theta):
         """Compute MSE loss"""
@@ -44,10 +46,8 @@ class LinearRegressionGD:
             else np.column_stack([np.ones(X.shape[0]), X])
         )
         self.theta = np.zeros(d + 1, dtype=np.float64)
-        self.loss_history.append(
-            self._compute_loss(X_with_intercept, y, self.theta)
-        )
-        is_finalized = False
+        loss = self._compute_loss(X_with_intercept, y, self.theta)
+        self.loss_history.append(loss)
         for idx in tqdm(range(self.num_iterations)):
             gradient = self._compute_gradient(X_with_intercept, y, self.theta)
             self._update_theta(gradient)
@@ -56,17 +56,15 @@ class LinearRegressionGD:
                     logger.info("Theta: %.02f", self.theta)
                 else:
                     logger.debug("Theta: %.02f", self.theta)
-                self.loss_history.append(
-                    self._compute_loss(X_with_intercept, y, self.theta)
-                )
-                is_finalized = (np.abs(sum(gradient)) < self.tolerance) or (
-                    (idx > 1)
-                    and (
-                        np.abs(self.loss_history[-1] - self.loss_history[-2])
-                        < self.tolerance
-                    )
-                )
-                if is_finalized:
+            self.loss_history.append(
+                self._compute_loss(X_with_intercept, y, self.theta)
+            )
+            if idx > 0:
+                # if abs(self.loss_history[-1] - self.loss_history[-2]) < self.tolerance: This is too slow for tests
+                if  np.linalg.norm(gradient) < self.tolerance:
+                    print(self.loss_history)
+                    if self.verbose:
+                        logger.info("Converged at iteration: %s.", idx)
                     break
 
     def _update_theta(self, gradient) -> None:
@@ -149,3 +147,31 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+
+    # Generate synthetic data with multiple features
+    np.random.seed(42)
+    m = 1000  # samples
+    d = 5     # features
+
+    X = np.random.randn(m, d)
+    true_theta = np.array([2.0, 1.5, -3.0, 0.5, 2.5, -1.0])  # [intercept, features]
+    y = true_theta[0] + X @ true_theta[1:] + 0.5 * np.random.randn(m)
+
+    # Fit using gradient descent
+    model_gd = LinearRegressionGD(learning_rate=0.01, num_iterations=2000, verbose=False)
+    model_gd.fit(X, y)
+
+    # Closed-form solution
+    X_with_intercept = np.column_stack([np.ones(m), X])
+    theta_closed_form = np.linalg.inv(X_with_intercept.T @ X_with_intercept) @ X_with_intercept.T @ y
+
+    # Compare results
+    print("Parameter Comparison:")
+    print(f"{'Parameter':<12} {'True Value':<12} {'Gradient Descent':<18} {'Closed-Form':<12}")
+    print("-" * 60)
+    print(f"{'θ₀':<12} {true_theta[0]:<12.4f} {model_gd.theta[0]:<18.4f} {theta_closed_form[0]:<12.4f}")
+    for i in range(1, d+1):
+        print(f"{'θ'+str(i):<12} {true_theta[i]:<12.4f} {model_gd.theta[i]:<18.4f} {theta_closed_form[i]:<12.4f}")
+
+    # Plot convergence
+    model_gd.plot_loss_history()
