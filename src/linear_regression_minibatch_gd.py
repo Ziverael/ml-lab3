@@ -1,10 +1,13 @@
+import logging
+
 import numpy as np
 from tqdm import tqdm
-import logging
+
 
 logger = logging.getLogger(__name__)
 
 from src.linear_regression_gd import LinearRegressionGD
+
 
 class LinearRegressionMiniBatchGD(LinearRegressionGD):
     """Linear Regression using Mini-Batch Gradient Descent"""
@@ -32,7 +35,9 @@ class LinearRegressionMiniBatchGD(LinearRegressionGD):
         self.theta = np.zeros(d + 1)
 
         self.loss_history = []
-        self.loss_history.append(self._compute_loss(X_with_intercept, y, self.theta))
+        self.loss_history.append(
+            self._compute_loss(X_with_intercept, y, self.theta)
+        )
 
         for epoch in tqdm(range(self.num_epochs)):
             # Shuffle indices
@@ -48,19 +53,19 @@ class LinearRegressionMiniBatchGD(LinearRegressionGD):
 
                 # Compute gradient for the batch
                 predictions = X_batch @ self.theta
-                gradient = (1 / len(y_batch)) * X_batch.T @ (predictions - y_batch)
+                self._current_gradient = (
+                    (1 / len(y_batch)) * X_batch.T @ (predictions - y_batch)
+                )
 
-                self._update_theta(gradient)
+                self._update_theta()
 
-            # Compute loss after all batches
             epoch_loss = self._compute_loss(X_with_intercept, y, self.theta)
             self.loss_history.append(epoch_loss)
 
-            if self.verbose and (epoch % 5 == 0):
-                logger.info(f"Epoch {epoch}, Loss: {epoch_loss:.6f}, Theta: {self.theta}")
+            if not (epoch % 5):
+                self._log_progress()
 
-            # Early stopping
-            if abs(self.loss_history[-1] - self.loss_history[-2]) < self.tolerance:
+            if self._is_early_stopped():
                 break
 
         return self
