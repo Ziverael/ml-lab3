@@ -63,9 +63,9 @@ class LinearRegressionGD:
 
     def _log_progress(self) -> None:
         if self.verbose:
-            logger.info("Theta: %.02f", self.theta)
+            logger.info("Theta: %s", ", ".join(f"{v:.2f}" for v in self.theta))
         else:
-            logger.debug("Theta: %.02f", self.theta)
+            logger.debug("Theta: %s", ", ".join(f"{v:.2f}" for v in self.theta))
 
     def _update_theta(self) -> None:
         self.theta = self.theta - self.learning_rate * self._current_gradient
